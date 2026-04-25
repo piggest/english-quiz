@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英単語クイズ</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Hiragino Sans", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #2d3748;
+    overflow-x: hidden;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px;
+  }
+  h1 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 2rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: rgba(255,255,255,0.15);
+    padding: 6px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: #fff;
+    color: #667eea;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .panel {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    display: none;
+  }
+  .panel.active { display: block; }
+
+  /* クイズ */
+  .quiz-empty {
+    text-align: center;
+    color: #718096;
+    padding: 40px 0;
+  }
+  .quiz-jp {
+    font-size: 2.5rem;
+    text-align: center;
+    margin: 24px 0 32px;
+    color: #2d3748;
+    font-weight: 700;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .quiz-input {
+    width: 100%;
+    padding: 18px 20px;
+    font-size: 1.4rem;
+    border: 3px solid #e2e8f0;
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+  }
+  .quiz-input:focus { border-color: #667eea; }
+  .quiz-input.shake { animation: shake 0.4s; border-color: #fc8181; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-12px); }
+    40%, 80% { transform: translateX(12px); }
+  }
+  .quiz-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    color: #718096;
+    font-size: 0.95rem;
+  }
+  .skip-btn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    background: #edf2f7;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: #4a5568;
+    cursor: pointer;
+  }
+  .skip-btn:hover { background: #e2e8f0; }
+  .hearts {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: 1.8rem;
+  }
+  .heart { transition: all 0.2s; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15)); }
+  .heart.lost { filter: grayscale(1) opacity(0.3); transform: scale(0.8); }
+
+  /* 結果 */
+  .result { text-align: center; padding: 16px 0; }
+  .result-title {
+    font-size: 1.1rem;
+    color: #718096;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+  .result-score {
+    font-size: 5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .result-score span { font-size: 2rem; color: #a0aec0; -webkit-text-fill-color: #a0aec0; }
+  .result-rate { font-size: 1.3rem; color: #4a5568; margin-bottom: 8px; }
+  .result-detail { color: #718096; margin-bottom: 16px; }
+  .result-comment {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 24px;
+  }
+
+  /* 登録 */
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.9rem;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    outline: none;
+  }
+  .form-group input:focus { border-color: #667eea; }
+  .add-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .add-btn:hover { opacity: 0.9; }
+
+  /* 一覧 */
+  .word-count {
+    color: #718096;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+  .word-list {
+    list-style: none;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  .word-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid #edf2f7;
+  }
+  .word-item:last-child { border-bottom: none; }
+  .word-jp { flex: 1; font-weight: 600; }
+  .word-en { flex: 1; color: #4a5568; font-family: monospace; }
+  .delete-btn {
+    background: #fed7d7;
+    color: #c53030;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .delete-btn:hover { background: #feb2b2; }
+  .empty-list {
+    text-align: center;
+    color: #a0aec0;
+    padding: 40px 0;
+  }
+
+  /* 正解演出 */
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #f6e05e, #f6ad55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .flash.show {
+    opacity: 1;
+    animation: flashPulse 0.6s;
+  }
+  @keyframes flashPulse {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .flash-text {
+    font-size: 6rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    letter-spacing: 4px;
+  }
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #2d3748;
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-weight: 600;
+    transition: transform 0.3s;
+    z-index: 999;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>英単語クイズ</h1>
+    <div class="tabs">
+      <button class="tab active" data-tab="quiz">クイズ</button>
+      <button class="tab" data-tab="register">単語登録</button>
+      <button class="tab" data-tab="list">一覧</button>
+    </div>
+
+    <div class="panel active" id="quiz-panel">
+      <div id="quiz-content"></div>
+    </div>
+
+    <div class="panel" id="register-panel">
+      <div class="form-group">
+        <label>日本語</label>
+        <input type="text" id="input-jp" placeholder="例: りんご">
+      </div>
+      <div class="form-group">
+        <label>英語</label>
+        <input type="text" id="input-en" placeholder="例: apple">
+      </div>
+      <button class="add-btn" id="add-btn">追加する</button>
+    </div>
+
+    <div class="panel" id="list-panel">
+      <div class="word-count" id="word-count"></div>
+      <ul class="word-list" id="word-list"></ul>
+    </div>
+  </div>
+
+  <div class="flash" id="flash">
+    <div class="flash-text">CORRECT!</div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'english-quiz-words';
+  let words = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const MAX_MISSES = 3;
+  let currentWord = null;
+  let queue = [];
+  let roundStats = { correct: 0, skipped: 0, failed: 0, total: 0 };
+  let misses = 0;
+  let locked = false;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startRound() {
+    queue = shuffle(words);
+    roundStats = { correct: 0, skipped: 0, failed: 0, total: words.length };
+    nextQuestion();
+  }
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // 効果音生成
+  function playCorrectSound() {
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C-E-G-C
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.08 + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + i * 0.08);
+      osc.stop(audioCtx.currentTime + i * 0.08 + 0.3);
+    });
+  }
+
+  function playWrongSound() {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // タブ切り替え
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab + '-panel').classList.add('active');
+      if (tab.dataset.tab === 'quiz') startRound();
+      if (tab.dataset.tab === 'list') renderList();
+    });
+  });
+
+  // クイズ出題
+  function nextQuestion() {
+    const content = document.getElementById('quiz-content');
+    if (words.length === 0) {
+      content.innerHTML = '<div class="quiz-empty">単語がまだ登録されていません。<br>「単語登録」タブから追加してください。</div>';
+      return;
+    }
+    if (queue.length === 0) {
+      showResult();
+      return;
+    }
+    currentWord = queue.shift();
+    misses = 0;
+    const progress = roundStats.total - queue.length;
+    content.innerHTML = `
+      <div class="quiz-jp">${escapeHtml(currentWord.jp)}</div>
+      <input type="text" class="quiz-input" id="quiz-input" placeholder="英語で入力" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="hearts" id="hearts">${renderHearts(0)}</div>
+      <button class="skip-btn" id="skip-btn">答えを見る</button>
+      <div class="quiz-meta">
+        <span>${progress} / ${roundStats.total} 問</span>
+        <span>正解: ${roundStats.correct}</span>
+      </div>
+    `;
+    const input = document.getElementById('quiz-input');
+    input.focus();
+    input.addEventListener('keydown', (e) => {
+      if (locked) { e.preventDefault(); return; }
+      if (e.key === 'Enter') checkAnswer(input.value);
+    });
+    document.getElementById('skip-btn').addEventListener('click', () => {
+      if (locked) return;
+      locked = true;
+      roundStats.skipped++;
+      showToast(`答え: ${currentWord.en}`);
+      setTimeout(() => { locked = false; nextQuestion(); }, 1500);
+    });
+  }
+
+  function showResult() {
+    const content = document.getElementById('quiz-content');
+    const { correct, skipped, total } = roundStats;
+    const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
+    let comment = '';
+    if (rate === 100) comment = 'パーフェクト！';
+    else if (rate >= 80) comment = 'すごい！';
+    else if (rate >= 50) comment = 'いい調子。';
+    else comment = 'もう一回挑戦しよう。';
+    content.innerHTML = `
+      <div class="result">
+        <div class="result-title">結果</div>
+        <div class="result-score">${correct} <span>/ ${total}</span></div>
+        <div class="result-rate">正答率 ${rate}%</div>
+        <div class="result-detail">不正解: ${roundStats.failed} 問 / スキップ: ${skipped} 問</div>
+        <div class="result-comment">${comment}</div>
+        <button class="add-btn" id="restart-btn">もう一度</button>
+      </div>
+    `;
+    document.getElementById('restart-btn').addEventListener('click', startRound);
+    if (rate === 100) celebrate();
+  }
+
+  function checkAnswer(value) {
+    if (locked) return;
+    const answer = value.trim().toLowerCase();
+    const correct = currentWord.en.trim().toLowerCase();
+    if (answer === correct) {
+      roundStats.correct++;
+      locked = true;
+      const input = document.getElementById('quiz-input');
+      if (input) input.blur();
+      celebrate();
+      setTimeout(() => { locked = false; nextQuestion(); }, 1400);
+    } else {
+      misses++;
+      const input = document.getElementById('quiz-input');
+      const hearts = document.getElementById('hearts');
+      if (hearts) hearts.innerHTML = renderHearts(misses);
+      input.classList.add('shake');
+      playWrongSound();
+      setTimeout(() => input.classList.remove('shake'), 400);
+      if (misses >= MAX_MISSES) {
+        locked = true;
+        roundStats.failed++;
+        if (input) input.blur();
+        showToast(`残念！答え: ${currentWord.en}`);
+        setTimeout(() => { locked = false; nextQuestion(); }, 1800);
+      } else {
+        input.select();
+      }
+    }
+  }
+
+  function renderHearts(missed) {
+    let s = '';
+    for (let i = 0; i < MAX_MISSES; i++) {
+      s += i < MAX_MISSES - missed
+        ? '<span class="heart">🍪</span>'
+        : '<span class="heart lost">🍪</span>';
+    }
+    return s;
+  }
+
+  // 正解演出
+  function celebrate() {
+    playCorrectSound();
+    const flash = document.getElementById('flash');
+    flash.classList.add('show');
+    setTimeout(() => flash.classList.remove('show'), 800);
+
+    // 紙吹雪を派手に
+    const duration = 1500;
+    const end = Date.now() + duration;
+    (function frame() {
+      confetti({
+        particleCount: 4,
+        angle: 60,
+        spread: 70,
+        origin: { x: 0, y: 0.7 },
+        colors: ['#f6e05e', '#fc8181', '#63b3ed', '#68d391', '#b794f4']
+      });
+      confetti({
+        particleCount: 4,
+        angle: 120,
+        spread: 70,
+        origin: { x: 1, y: 0.7 },
+        colors: ['#f6e05e', '#fc8181', '#63b3ed', '#68d391', '#b794f4']
+      });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+    confetti({
+      particleCount: 100,
+      spread: 100,
+      origin: { y: 0.6 }
+    });
+  }
+
+  // 登録
+  document.getElementById('add-btn').addEventListener('click', () => {
+    const jp = document.getElementById('input-jp').value.trim();
+    const en = document.getElementById('input-en').value.trim();
+    if (!jp || !en) {
+      showToast('両方入力してください');
+      return;
+    }
+    words.push({ jp, en, id: Date.now() });
+    save();
+    document.getElementById('input-jp').value = '';
+    document.getElementById('input-en').value = '';
+    document.getElementById('input-jp').focus();
+    showToast(`「${jp}」を追加しました`);
+  });
+
+  // Enterで追加
+  ['input-jp', 'input-en'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('add-btn').click();
+    });
+  });
+
+  // 一覧表示
+  function renderList() {
+    const list = document.getElementById('word-list');
+    const count = document.getElementById('word-count');
+    count.textContent = `登録単語: ${words.length} 件`;
+    if (words.length === 0) {
+      list.innerHTML = '<li class="empty-list">まだ単語がありません</li>';
+      return;
+    }
+    list.innerHTML = words.map(w => `
+      <li class="word-item">
+        <span class="word-jp">${escapeHtml(w.jp)}</span>
+        <span class="word-en">${escapeHtml(w.en)}</span>
+        <button class="delete-btn" data-id="${w.id}">削除</button>
+      </li>
+    `).join('');
+    list.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        words = words.filter(w => w.id !== id);
+        save();
+        renderList();
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // サンプル投入（初回のみ）
+  if (words.length === 0) {
+    words = [
+      { jp: 'りんご', en: 'apple', id: 1 },
+      { jp: '猫', en: 'cat', id: 2 },
+      { jp: '本', en: 'book', id: 3 }
+    ];
+    save();
+  }
+
+  startRound();
+</script>
+</body>
+</html>
