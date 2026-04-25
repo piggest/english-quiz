@@ -274,6 +274,7 @@
     position: fixed;
     inset: 0;
     background: linear-gradient(135deg, #f6e05e, #f6ad55);
+    background-size: 200% 200%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -281,22 +282,124 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
+    overflow: hidden;
   }
   .flash.show {
     opacity: 1;
-    animation: flashPulse 0.6s;
+    animation: flashIn 0.4s, bgShift 2s linear infinite 0.4s;
   }
-  @keyframes flashPulse {
-    0% { transform: scale(0.8); opacity: 0; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
+  @keyframes flashIn {
+    0% { opacity: 0; transform: scale(0.92); }
+    60% { transform: scale(1.04); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes bgShift {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+  .flash-inner {
+    text-align: center;
+    color: #fff;
+    padding: 0 20px;
   }
   .flash-text {
-    font-size: 6rem;
+    font-size: 5rem;
     font-weight: 900;
-    color: #fff;
-    text-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    background: linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6, #06b6d4, #22c55e, #facc15, #ec4899);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    -webkit-text-stroke: 2px #fff;
     letter-spacing: 4px;
+    line-height: 1;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.25));
+  }
+  .flash.show .flash-text {
+    animation: rainbowShift 1.2s linear infinite, bounce 0.6s ease-out 1, wiggle 1.5s ease-in-out infinite 0.6s;
+  }
+  @keyframes rainbowShift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+  @keyframes bounce {
+    0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+    50% { transform: scale(1.25) rotate(6deg); opacity: 1; }
+    75% { transform: scale(0.95) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(2deg); }
+    75% { transform: rotate(-2deg); }
+  }
+  .flash-word {
+    font-size: 4rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    word-break: break-word;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .flash.show .flash-word {
+    animation: zoomIn 0.5s ease-out 0.15s backwards, pulse 1.4s ease-in-out infinite 0.65s;
+  }
+  @keyframes zoomIn {
+    0% { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  .flash-jp {
+    font-size: 1.4rem;
+    color: #fff;
+    opacity: 0.95;
+  }
+  .flash.show .flash-jp {
+    animation: slideUp 0.5s ease-out 0.3s backwards;
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .reveal {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #f56565, #c53030);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .reveal.show { display: flex; }
+  .reveal-inner {
+    text-align: center;
+    color: #fff;
+    padding: 0 20px;
+  }
+  .reveal-label {
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    opacity: 0.9;
+    margin-bottom: 12px;
+  }
+  .reveal-en {
+    font-size: 5rem;
+    font-weight: 900;
+    text-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    line-height: 1.1;
+    word-break: break-word;
+    margin-bottom: 8px;
+  }
+  .reveal-jp {
+    font-size: 1.6rem;
+    opacity: 0.9;
   }
   .toast {
     position: fixed;
@@ -362,7 +465,18 @@
   </div>
 
   <div class="flash" id="flash">
-    <div class="flash-text">CORRECT!</div>
+    <div class="flash-inner">
+      <div class="flash-text">CORRECT!</div>
+      <div class="flash-word" id="flash-word"></div>
+      <div class="flash-jp" id="flash-jp"></div>
+    </div>
+  </div>
+  <div class="reveal" id="reveal">
+    <div class="reveal-inner">
+      <div class="reveal-label">正解は</div>
+      <div class="reveal-en" id="reveal-en"></div>
+      <div class="reveal-jp" id="reveal-jp"></div>
+    </div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -465,7 +579,6 @@
       <div class="quiz-jp">${escapeHtml(currentWord.jp)}</div>
       <input type="text" class="quiz-input" id="quiz-input" placeholder="英語で入力" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="hearts" id="hearts">${renderHearts(0)}</div>
-      <button class="skip-btn" id="skip-btn">答えを見る</button>
       <div class="quiz-meta">
         <span>${progress} / ${roundStats.total} 問</span>
         <span>正解: ${roundStats.correct}</span>
@@ -477,18 +590,11 @@
       if (locked) { e.preventDefault(); return; }
       if (e.key === 'Enter') checkAnswer(input.value);
     });
-    document.getElementById('skip-btn').addEventListener('click', () => {
-      if (locked) return;
-      locked = true;
-      roundStats.skipped++;
-      showToast(`答え: ${currentWord.en}`);
-      setTimeout(() => { locked = false; nextQuestion(); }, 1500);
-    });
   }
 
   function showResult() {
     const content = document.getElementById('quiz-content');
-    const { correct, skipped, total } = roundStats;
+    const { correct, total } = roundStats;
     const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
     let comment = '';
     if (rate === 100) comment = 'パーフェクト！';
@@ -500,7 +606,7 @@
         <div class="result-title">結果</div>
         <div class="result-score">${correct} <span>/ ${total}</span></div>
         <div class="result-rate">正答率 ${rate}%</div>
-        <div class="result-detail">不正解: ${roundStats.failed} 問 / スキップ: ${skipped} 問</div>
+        <div class="result-detail">不正解: ${roundStats.failed} 問</div>
         <div class="result-comment">${comment}</div>
         <button class="add-btn" id="restart-btn">もう一度</button>
       </div>
@@ -519,7 +625,7 @@
       const input = document.getElementById('quiz-input');
       if (input) input.blur();
       celebrate();
-      setTimeout(() => { locked = false; nextQuestion(); }, 1400);
+      setTimeout(() => { locked = false; nextQuestion(); }, 2000);
     } else {
       misses++;
       const input = document.getElementById('quiz-input');
@@ -532,12 +638,23 @@
         locked = true;
         roundStats.failed++;
         if (input) input.blur();
-        showToast(`残念！答え: ${currentWord.en}`);
-        setTimeout(() => { locked = false; nextQuestion(); }, 1800);
+        revealAnswer(currentWord, () => { locked = false; nextQuestion(); });
       } else {
         input.select();
       }
     }
+  }
+
+  function revealAnswer(word, onDone) {
+    const overlay = document.getElementById('reveal');
+    document.getElementById('reveal-jp').textContent = word.jp;
+    document.getElementById('reveal-en').textContent = word.en;
+    overlay.classList.add('show');
+    playWrongSound();
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      setTimeout(onDone, 250);
+    }, 2200);
   }
 
   function renderHearts(missed) {
@@ -554,11 +671,15 @@
   function celebrate() {
     playCorrectSound();
     const flash = document.getElementById('flash');
+    if (currentWord) {
+      document.getElementById('flash-word').textContent = currentWord.en;
+      document.getElementById('flash-jp').textContent = currentWord.jp;
+    }
     flash.classList.add('show');
-    setTimeout(() => flash.classList.remove('show'), 800);
+    setTimeout(() => flash.classList.remove('show'), 1800);
 
     // 紙吹雪を派手に
-    const duration = 1500;
+    const duration = 1800;
     const end = Date.now() + duration;
     (function frame() {
       confetti({
