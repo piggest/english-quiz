@@ -219,6 +219,55 @@
     color: #a0aec0;
     padding: 40px 0;
   }
+  .io-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .io-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 12px;
+    background: #edf2f7;
+    border: none;
+    border-radius: 8px;
+    color: #2d3748;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .io-btn:hover { background: #e2e8f0; }
+  .io-btn.primary { background: #667eea; color: #fff; }
+  .io-btn.primary:hover { background: #5a6fd8; }
+  .import-area {
+    display: none;
+    margin-bottom: 16px;
+  }
+  .import-area.show { display: block; }
+  .import-area textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    outline: none;
+    resize: vertical;
+  }
+  .import-area textarea:focus { border-color: #667eea; }
+  .import-area .row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .import-hint {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 6px;
+  }
 
   /* 正解演出 */
   .flash {
@@ -291,6 +340,22 @@
     </div>
 
     <div class="panel" id="list-panel">
+      <div class="io-bar">
+        <button class="io-btn" id="export-download">TSVダウンロード</button>
+        <button class="io-btn" id="export-copy">TSVコピー</button>
+        <button class="io-btn" id="import-file">ファイル読込</button>
+        <button class="io-btn" id="import-paste">貼り付け</button>
+        <input type="file" id="file-input" accept=".tsv,.txt,text/tab-separated-values" style="display:none">
+      </div>
+      <div class="import-area" id="import-area">
+        <textarea id="import-text" placeholder="りんご	apple&#10;猫	cat&#10;本	book"></textarea>
+        <div class="import-hint">1行1組、日本語と英語をタブ区切り。空行は無視。</div>
+        <div class="row">
+          <button class="io-btn primary" id="import-merge">追記する</button>
+          <button class="io-btn" id="import-replace">全置き換え</button>
+          <button class="io-btn" id="import-cancel">キャンセル</button>
+        </div>
+      </div>
       <div class="word-count" id="word-count"></div>
       <ul class="word-list" id="word-list"></ul>
     </div>
@@ -567,6 +632,103 @@
       });
     });
   }
+
+  // インポート/エクスポート
+  function toTSV(list) {
+    return list.map(w => `${w.jp}\t${w.en}`).join('\n');
+  }
+
+  function parseTSV(text) {
+    return text.split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const [jp, en] = line.split('\t').map(s => (s || '').trim());
+        return jp && en ? { jp, en } : null;
+      })
+      .filter(Boolean);
+  }
+
+  document.getElementById('export-download').addEventListener('click', () => {
+    if (words.length === 0) { showToast('単語がありません'); return; }
+    const blob = new Blob([toTSV(words)], { type: 'text/tab-separated-values' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `english-quiz-${new Date().toISOString().slice(0,10)}.tsv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('ダウンロード完了');
+  });
+
+  document.getElementById('export-copy').addEventListener('click', async () => {
+    if (words.length === 0) { showToast('単語がありません'); return; }
+    try {
+      await navigator.clipboard.writeText(toTSV(words));
+      showToast('クリップボードにコピー');
+    } catch {
+      showToast('コピーに失敗');
+    }
+  });
+
+  const importArea = document.getElementById('import-area');
+  const importText = document.getElementById('import-text');
+
+  document.getElementById('import-paste').addEventListener('click', () => {
+    importText.value = '';
+    importArea.classList.add('show');
+    importText.focus();
+  });
+
+  document.getElementById('import-cancel').addEventListener('click', () => {
+    importArea.classList.remove('show');
+  });
+
+  document.getElementById('import-file').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+  });
+
+  document.getElementById('file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    importText.value = text;
+    importArea.classList.add('show');
+    e.target.value = '';
+  });
+
+  function applyImport(replace) {
+    const parsed = parseTSV(importText.value);
+    if (parsed.length === 0) {
+      showToast('読み取れる行がありません');
+      return;
+    }
+    if (replace) {
+      words = parsed.map(w => ({ ...w, id: Date.now() + Math.random() }));
+    } else {
+      const existing = new Set(words.map(w => `${w.jp}\t${w.en}`));
+      let added = 0;
+      parsed.forEach(w => {
+        const key = `${w.jp}\t${w.en}`;
+        if (!existing.has(key)) {
+          words.push({ ...w, id: Date.now() + Math.random() });
+          existing.add(key);
+          added++;
+        }
+      });
+      showToast(`${added} 件追加（重複 ${parsed.length - added} 件）`);
+    }
+    save();
+    if (replace) showToast(`${parsed.length} 件で置き換え`);
+    importArea.classList.remove('show');
+    renderList();
+  }
+
+  document.getElementById('import-merge').addEventListener('click', () => applyImport(false));
+  document.getElementById('import-replace').addEventListener('click', () => {
+    if (!confirm(`現在の ${words.length} 件を全て削除して置き換えます。よろしいですか？`)) return;
+    applyImport(true);
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
