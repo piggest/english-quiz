@@ -427,6 +427,131 @@
     font-size: 1.6rem;
     opacity: 0.9;
   }
+  /* デッキバナー */
+  .deck-banner {
+    text-align: center;
+    color: #fff;
+    margin: -12px 0 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    opacity: 0.95;
+  }
+
+  /* サブタブ */
+  .subtabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #edf2f7;
+  }
+  .subtab {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    color: #a0aec0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .subtab.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+  }
+  .subpanel { display: none; }
+  .subpanel.active { display: block; }
+
+  /* デッキ管理 */
+  .deck-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .deck-actions .io-btn { flex: 1; }
+  .deck-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #718096;
+    letter-spacing: 1px;
+    margin: 16px 0 8px;
+  }
+  .deck-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border: 2px solid #edf2f7;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    background: #fff;
+  }
+  .deck-card.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f5f3ff, #ebf4ff);
+  }
+  .deck-card .deck-info { flex: 1; min-width: 0; }
+  .deck-card .deck-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #2d3748;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .deck-card .deck-meta {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-top: 2px;
+  }
+  .deck-card .deck-btns {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .deck-mini-btn {
+    padding: 6px 10px;
+    background: #edf2f7;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #4a5568;
+    cursor: pointer;
+  }
+  .deck-mini-btn:hover { background: #e2e8f0; }
+  .deck-mini-btn.danger { background: #fed7d7; color: #c53030; }
+  .deck-mini-btn.danger:hover { background: #feb2b2; }
+  .deck-mini-btn.primary { background: #667eea; color: #fff; }
+  .deck-mini-btn.primary:hover { background: #5a6fd8; }
+  .deck-empty { color: #a0aec0; padding: 16px 0; text-align: center; font-size: 0.9rem; }
+
+  .preset-area {
+    display: none;
+    padding: 14px;
+    background: #f7fafc;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .preset-area.show { display: block; }
+  .preset-header {
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 10px;
+  }
+  .preset-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .preset-item .preset-title { flex: 1; font-weight: 600; color: #2d3748; }
+  .preset-item .preset-file { font-size: 0.8rem; color: #a0aec0; margin-right: 8px; font-family: monospace; }
+
   .toast {
     position: fixed;
     bottom: 32px;
@@ -446,6 +571,7 @@
 <body>
   <div class="container">
     <h1>英単語クイズ</h1>
+    <div class="deck-banner" id="deck-banner"></div>
     <div class="tabs">
       <button class="tab active" data-tab="quiz">クイズ</button>
       <button class="tab" data-tab="register">単語登録</button>
@@ -469,37 +595,60 @@
     </div>
 
     <div class="panel" id="list-panel">
-      <div class="io-bar">
-        <button class="io-btn" id="export-download">TSVダウンロード</button>
-        <button class="io-btn" id="export-copy">TSVコピー</button>
-        <button class="io-btn" id="import-file">ファイル読込</button>
-        <button class="io-btn" id="import-paste">貼り付け</button>
-        <input type="file" id="file-input" accept=".tsv,.txt,text/tab-separated-values" style="display:none">
+      <div class="subtabs">
+        <button class="subtab active" data-subtab="words">単語</button>
+        <button class="subtab" data-subtab="decks">デッキ</button>
       </div>
-      <div class="import-area" id="import-area">
-        <textarea id="import-text" placeholder="りんご	apple&#10;猫	cat&#10;本	book"></textarea>
-        <div class="import-hint">1行1組、日本語と英語をタブ区切り。空行は無視。</div>
-        <div class="row">
-          <button class="io-btn primary" id="import-merge">追記する</button>
-          <button class="io-btn" id="import-replace">全置き換え</button>
-          <button class="io-btn" id="import-cancel">キャンセル</button>
+
+      <div class="subpanel active" id="words-subpanel">
+        <div class="io-bar">
+          <button class="io-btn" id="export-download">TSVダウンロード</button>
+          <button class="io-btn" id="export-copy">TSVコピー</button>
+          <button class="io-btn" id="import-file">ファイル読込</button>
+          <button class="io-btn" id="import-paste">貼り付け</button>
+          <input type="file" id="file-input" accept=".tsv,.txt,text/tab-separated-values" style="display:none">
         </div>
+        <div class="import-area" id="import-area">
+          <textarea id="import-text" placeholder="りんご	apple&#10;猫	cat&#10;本	book"></textarea>
+          <div class="import-hint">1行1組、日本語と英語をタブ区切り。空行は無視。</div>
+          <div class="row">
+            <button class="io-btn primary" id="import-merge">追記する</button>
+            <button class="io-btn" id="import-replace">全置き換え</button>
+            <button class="io-btn" id="import-cancel">キャンセル</button>
+          </div>
+        </div>
+        <div class="round-setting">
+          <label for="round-size">1ラウンドの問題数</label>
+          <select id="round-size">
+            <option value="10">10 問</option>
+            <option value="20">20 問</option>
+            <option value="30">30 問</option>
+            <option value="50">50 問</option>
+            <option value="100">100 問</option>
+            <option value="200">200 問</option>
+            <option value="300">300 問</option>
+            <option value="all">全部</option>
+          </select>
+        </div>
+        <div class="word-count" id="word-count"></div>
+        <ul class="word-list" id="word-list"></ul>
       </div>
-      <div class="round-setting">
-        <label for="round-size">1ラウンドの問題数</label>
-        <select id="round-size">
-          <option value="10">10 問</option>
-          <option value="20">20 問</option>
-          <option value="30">30 問</option>
-          <option value="50">50 問</option>
-          <option value="100">100 問</option>
-          <option value="200">200 問</option>
-          <option value="300">300 問</option>
-          <option value="all">全部</option>
-        </select>
+
+      <div class="subpanel" id="decks-subpanel">
+        <div class="deck-actions">
+          <button class="io-btn primary" id="deck-create">新規デッキ作成</button>
+          <button class="io-btn" id="deck-load-preset">プリセット読込</button>
+        </div>
+        <div class="preset-area" id="preset-area">
+          <div class="preset-header">プリセット</div>
+          <div id="preset-list"></div>
+          <button class="io-btn" id="preset-cancel" style="margin-top:8px;">閉じる</button>
+        </div>
+        <div class="deck-section-title">現在のデッキ</div>
+        <div id="deck-active"></div>
+        <div class="deck-section-title">他のデッキ</div>
+        <div id="deck-others"></div>
       </div>
-      <div class="word-count" id="word-count"></div>
-      <ul class="word-list" id="word-list"></ul>
     </div>
   </div>
 
@@ -520,9 +669,38 @@
   <div class="toast" id="toast"></div>
 
 <script>
-  const STORAGE_KEY = 'english-quiz-words';
+  const DECKS_KEY = 'english-quiz-decks';
+  const ACTIVE_DECK_KEY = 'english-quiz-active-deck-id';
   const ROUND_SIZE_KEY = 'english-quiz-round-size';
-  let words = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+  function genId() { return 'd' + Date.now() + Math.floor(Math.random() * 1000); }
+
+  function sampleWords() {
+    return [
+      { jp: 'りんご', en: 'apple', id: 1 },
+      { jp: '猫', en: 'cat', id: 2 },
+      { jp: '本', en: 'book', id: 3 }
+    ];
+  }
+
+  // 旧データ移行 + デッキ初期化
+  let decks = JSON.parse(localStorage.getItem(DECKS_KEY) || 'null');
+  if (!decks || !decks.length) {
+    const oldWords = JSON.parse(localStorage.getItem('english-quiz-words') || '[]');
+    decks = [{
+      id: genId(),
+      title: 'マイ単語',
+      words: oldWords.length ? oldWords : sampleWords()
+    }];
+    localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+  }
+  let activeDeckId = localStorage.getItem(ACTIVE_DECK_KEY);
+  let activeDeck = decks.find(d => d.id === activeDeckId) || decks[0];
+  if (activeDeck.id !== activeDeckId) {
+    localStorage.setItem(ACTIVE_DECK_KEY, activeDeck.id);
+  }
+  let availablePresets = [];
+
   let roundSize = localStorage.getItem(ROUND_SIZE_KEY) || 'all';
   const MAX_MISSES = 3;
   let currentWord = null;
@@ -541,7 +719,7 @@
   }
 
   function startRound() {
-    const shuffled = shuffle(words);
+    const shuffled = shuffle(activeDeck.words);
     const size = roundSize === 'all' ? shuffled.length : Math.min(parseInt(roundSize, 10), shuffled.length);
     queue = shuffled.slice(0, size);
     roundStats = { correct: 0, skipped: 0, failed: 0, total: queue.length };
@@ -582,7 +760,22 @@
   }
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+    localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+  }
+
+  function setActiveDeck(id) {
+    const d = decks.find(x => x.id === id);
+    if (!d) return;
+    activeDeck = d;
+    localStorage.setItem(ACTIVE_DECK_KEY, id);
+    updateBanner();
+    renderDeckList();
+    renderList();
+  }
+
+  function updateBanner() {
+    const banner = document.getElementById('deck-banner');
+    if (banner) banner.textContent = activeDeck ? activeDeck.title : '';
   }
 
   function showToast(msg) {
@@ -607,7 +800,7 @@
   // クイズ出題
   function nextQuestion() {
     const content = document.getElementById('quiz-content');
-    if (words.length === 0) {
+    if (activeDeck.words.length === 0) {
       content.innerHTML = '<div class="quiz-empty">単語がまだ登録されていません。<br>「単語登録」タブから追加してください。</div>';
       return;
     }
@@ -756,7 +949,7 @@
       showToast('両方入力してください');
       return;
     }
-    words.push({ jp, en, id: Date.now() });
+    activeDeck.words.push({ jp, en, id: Date.now() });
     save();
     document.getElementById('input-jp').value = '';
     document.getElementById('input-en').value = '';
@@ -775,12 +968,13 @@
   function renderList() {
     const list = document.getElementById('word-list');
     const count = document.getElementById('word-count');
-    count.textContent = `登録単語: ${words.length} 件`;
-    if (words.length === 0) {
+    if (!list || !count) return;
+    count.textContent = `登録単語: ${activeDeck.words.length} 件`;
+    if (activeDeck.words.length === 0) {
       list.innerHTML = '<li class="empty-list">まだ単語がありません</li>';
       return;
     }
-    list.innerHTML = words.map(w => `
+    list.innerHTML = activeDeck.words.map(w => `
       <li class="word-item">
         <span class="word-jp">${escapeHtml(w.jp)}</span>
         <span class="word-en">${escapeHtml(w.en)}</span>
@@ -789,10 +983,11 @@
     `).join('');
     list.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = Number(btn.dataset.id);
-        words = words.filter(w => w.id !== id);
+        const id = btn.dataset.id;
+        activeDeck.words = activeDeck.words.filter(w => String(w.id) !== id);
         save();
         renderList();
+        renderDeckList();
       });
     });
   }
@@ -814,21 +1009,22 @@
   }
 
   document.getElementById('export-download').addEventListener('click', () => {
-    if (words.length === 0) { showToast('単語がありません'); return; }
-    const blob = new Blob([toTSV(words)], { type: 'text/tab-separated-values' });
+    if (activeDeck.words.length === 0) { showToast('単語がありません'); return; }
+    const blob = new Blob([toTSV(activeDeck.words)], { type: 'text/tab-separated-values' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const safeTitle = (activeDeck.title || 'deck').replace(/[^a-zA-Z0-9一-龥ぁ-んァ-ヴー\-_]/g, '_');
     a.href = url;
-    a.download = `english-quiz-${new Date().toISOString().slice(0,10)}.tsv`;
+    a.download = `${safeTitle}-${new Date().toISOString().slice(0,10)}.tsv`;
     a.click();
     URL.revokeObjectURL(url);
     showToast('ダウンロード完了');
   });
 
   document.getElementById('export-copy').addEventListener('click', async () => {
-    if (words.length === 0) { showToast('単語がありません'); return; }
+    if (activeDeck.words.length === 0) { showToast('単語がありません'); return; }
     try {
-      await navigator.clipboard.writeText(toTSV(words));
+      await navigator.clipboard.writeText(toTSV(activeDeck.words));
       showToast('クリップボードにコピー');
     } catch {
       showToast('コピーに失敗');
@@ -868,14 +1064,14 @@
       return;
     }
     if (replace) {
-      words = parsed.map(w => ({ ...w, id: Date.now() + Math.random() }));
+      activeDeck.words = parsed.map(w => ({ ...w, id: Date.now() + Math.random() }));
     } else {
-      const existing = new Set(words.map(w => `${w.jp}\t${w.en}`));
+      const existing = new Set(activeDeck.words.map(w => `${w.jp}\t${w.en}`));
       let added = 0;
       parsed.forEach(w => {
         const key = `${w.jp}\t${w.en}`;
         if (!existing.has(key)) {
-          words.push({ ...w, id: Date.now() + Math.random() });
+          activeDeck.words.push({ ...w, id: Date.now() + Math.random() });
           existing.add(key);
           added++;
         }
@@ -886,6 +1082,7 @@
     if (replace) showToast(`${parsed.length} 件で置き換え`);
     importArea.classList.remove('show');
     renderList();
+    renderDeckList();
   }
 
   // ラウンド問題数設定
@@ -899,7 +1096,7 @@
 
   document.getElementById('import-merge').addEventListener('click', () => applyImport(false));
   document.getElementById('import-replace').addEventListener('click', () => {
-    if (!confirm(`現在の ${words.length} 件を全て削除して置き換えます。よろしいですか？`)) return;
+    if (!confirm(`現在の ${activeDeck.words.length} 件を全て削除して置き換えます。よろしいですか？`)) return;
     applyImport(true);
   });
 
@@ -907,16 +1104,161 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // サンプル投入（初回のみ）
-  if (words.length === 0) {
-    words = [
-      { jp: 'りんご', en: 'apple', id: 1 },
-      { jp: '猫', en: 'cat', id: 2 },
-      { jp: '本', en: 'book', id: 3 }
-    ];
-    save();
+  // サブタブ切替
+  document.querySelectorAll('.subtab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.subtab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.subpanel').forEach(p => p.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById(t.dataset.subtab + '-subpanel').classList.add('active');
+      if (t.dataset.subtab === 'decks') renderDeckList();
+    });
+  });
+
+  // デッキ管理
+  function renderDeckList() {
+    const activeEl = document.getElementById('deck-active');
+    const othersEl = document.getElementById('deck-others');
+    if (!activeEl || !othersEl) return;
+    activeEl.innerHTML = renderDeckCard(activeDeck, true);
+    const others = decks.filter(d => d.id !== activeDeck.id);
+    othersEl.innerHTML = others.length
+      ? others.map(d => renderDeckCard(d, false)).join('')
+      : '<div class="deck-empty">他のデッキはまだありません</div>';
+    bindDeckCardEvents();
   }
 
+  function renderDeckCard(deck, isActive) {
+    return `
+      <div class="deck-card ${isActive ? 'active' : ''}" data-id="${deck.id}">
+        <div class="deck-info">
+          <div class="deck-title">${escapeHtml(deck.title)}</div>
+          <div class="deck-meta">${deck.words.length} 単語</div>
+        </div>
+        <div class="deck-btns">
+          ${!isActive ? `<button class="deck-mini-btn primary" data-action="activate">使う</button>` : ''}
+          <button class="deck-mini-btn" data-action="rename">名前</button>
+          <button class="deck-mini-btn" data-action="duplicate">複製</button>
+          <button class="deck-mini-btn danger" data-action="delete">削除</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindDeckCardEvents() {
+    document.querySelectorAll('.deck-card .deck-mini-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.deck-card');
+        const id = card.dataset.id;
+        const action = btn.dataset.action;
+        const deck = decks.find(d => d.id === id);
+        if (!deck) return;
+        if (action === 'activate') {
+          setActiveDeck(id);
+          showToast(`「${deck.title}」に切替`);
+        } else if (action === 'rename') {
+          const newTitle = prompt('デッキ名', deck.title);
+          if (newTitle && newTitle.trim()) {
+            deck.title = newTitle.trim();
+            save();
+            updateBanner();
+            renderDeckList();
+          }
+        } else if (action === 'duplicate') {
+          const copy = {
+            id: genId(),
+            title: deck.title + ' (コピー)',
+            words: deck.words.map(w => ({ ...w, id: Date.now() + Math.random() }))
+          };
+          decks.push(copy);
+          save();
+          renderDeckList();
+          showToast(`複製しました`);
+        } else if (action === 'delete') {
+          if (decks.length <= 1) { showToast('最後のデッキは削除できません'); return; }
+          if (!confirm(`デッキ「${deck.title}」を削除します。よろしいですか？`)) return;
+          decks = decks.filter(d => d.id !== id);
+          if (activeDeck.id === id) {
+            activeDeck = decks[0];
+            localStorage.setItem(ACTIVE_DECK_KEY, activeDeck.id);
+            updateBanner();
+          }
+          save();
+          renderDeckList();
+          renderList();
+        }
+      });
+    });
+  }
+
+  document.getElementById('deck-create').addEventListener('click', () => {
+    const title = prompt('新しいデッキの名前', '新規デッキ');
+    if (!title || !title.trim()) return;
+    const newDeck = { id: genId(), title: title.trim(), words: [] };
+    decks.push(newDeck);
+    save();
+    setActiveDeck(newDeck.id);
+    showToast(`「${newDeck.title}」を作成`);
+  });
+
+  // プリセット読込
+  const presetArea = document.getElementById('preset-area');
+
+  document.getElementById('deck-load-preset').addEventListener('click', async () => {
+    presetArea.classList.add('show');
+    const listEl = document.getElementById('preset-list');
+    listEl.innerHTML = '<div class="deck-empty">読み込み中...</div>';
+    try {
+      if (!availablePresets.length) {
+        const res = await fetch('presets.json', { cache: 'no-cache' });
+        if (!res.ok) throw new Error('not ok');
+        availablePresets = await res.json();
+      }
+      if (!availablePresets.length) {
+        listEl.innerHTML = '<div class="deck-empty">プリセットがありません</div>';
+        return;
+      }
+      listEl.innerHTML = availablePresets.map((p, i) => `
+        <div class="preset-item">
+          <div class="preset-title">${escapeHtml(p.title)}</div>
+          <div class="preset-file">${escapeHtml(p.file)}</div>
+          <button class="deck-mini-btn primary" data-i="${i}">読込</button>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => loadPreset(availablePresets[+btn.dataset.i]));
+      });
+    } catch (e) {
+      listEl.innerHTML = '<div class="deck-empty">プリセットを読み込めません<br><small>(ローカル file:// では fetch できません)</small></div>';
+    }
+  });
+
+  document.getElementById('preset-cancel').addEventListener('click', () => {
+    presetArea.classList.remove('show');
+  });
+
+  async function loadPreset(preset) {
+    try {
+      const res = await fetch(preset.file, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('not ok');
+      const text = await res.text();
+      const parsed = parseTSV(text);
+      const newDeck = {
+        id: genId(),
+        title: preset.title,
+        words: parsed.map(w => ({ ...w, id: Date.now() + Math.random() }))
+      };
+      decks.push(newDeck);
+      save();
+      setActiveDeck(newDeck.id);
+      presetArea.classList.remove('show');
+      showToast(`「${preset.title}」を読込（${parsed.length} 単語）`);
+    } catch (e) {
+      showToast('読込に失敗');
+    }
+  }
+
+  updateBanner();
   startRound();
 </script>
 </body>
