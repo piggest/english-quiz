@@ -268,6 +268,32 @@
     color: #718096;
     margin-top: 6px;
   }
+  .round-setting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #f7fafc;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .round-setting label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.95rem;
+    flex: 1;
+  }
+  .round-setting select {
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.95rem;
+    color: #2d3748;
+    cursor: pointer;
+    outline: none;
+  }
+  .round-setting select:focus { border-color: #667eea; }
 
   /* 正解演出 */
   .flash {
@@ -459,6 +485,19 @@
           <button class="io-btn" id="import-cancel">キャンセル</button>
         </div>
       </div>
+      <div class="round-setting">
+        <label for="round-size">1ラウンドの問題数</label>
+        <select id="round-size">
+          <option value="10">10 問</option>
+          <option value="20">20 問</option>
+          <option value="30">30 問</option>
+          <option value="50">50 問</option>
+          <option value="100">100 問</option>
+          <option value="200">200 問</option>
+          <option value="300">300 問</option>
+          <option value="all">全部</option>
+        </select>
+      </div>
       <div class="word-count" id="word-count"></div>
       <ul class="word-list" id="word-list"></ul>
     </div>
@@ -482,7 +521,9 @@
 
 <script>
   const STORAGE_KEY = 'english-quiz-words';
+  const ROUND_SIZE_KEY = 'english-quiz-round-size';
   let words = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let roundSize = localStorage.getItem(ROUND_SIZE_KEY) || 'all';
   const MAX_MISSES = 3;
   let currentWord = null;
   let queue = [];
@@ -500,8 +541,10 @@
   }
 
   function startRound() {
-    queue = shuffle(words);
-    roundStats = { correct: 0, skipped: 0, failed: 0, total: words.length };
+    const shuffled = shuffle(words);
+    const size = roundSize === 'all' ? shuffled.length : Math.min(parseInt(roundSize, 10), shuffled.length);
+    queue = shuffled.slice(0, size);
+    roundStats = { correct: 0, skipped: 0, failed: 0, total: queue.length };
     nextQuestion();
   }
 
@@ -844,6 +887,15 @@
     importArea.classList.remove('show');
     renderList();
   }
+
+  // ラウンド問題数設定
+  const roundSelect = document.getElementById('round-size');
+  roundSelect.value = roundSize;
+  roundSelect.addEventListener('change', () => {
+    roundSize = roundSelect.value;
+    localStorage.setItem(ROUND_SIZE_KEY, roundSize);
+    showToast(`1ラウンド ${roundSize === 'all' ? '全部' : roundSize + ' 問'} に設定`);
+  });
 
   document.getElementById('import-merge').addEventListener('click', () => applyImport(false));
   document.getElementById('import-replace').addEventListener('click', () => {
