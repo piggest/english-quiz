@@ -453,6 +453,22 @@
   .reveal-jp {
     font-size: 1.6rem;
     opacity: 0.9;
+    margin-bottom: 32px;
+  }
+  .reveal-hint {
+    display: inline-block;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 30px;
+    font-size: 0.95rem;
+    color: #fff;
+    cursor: pointer;
+    animation: hintPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 1; }
   }
   /* フィナーレ演出 */
   .finale {
@@ -824,6 +840,7 @@
       <div class="reveal-label">正解は</div>
       <div class="reveal-en" id="reveal-en"></div>
       <div class="reveal-jp" id="reveal-jp"></div>
+      <div class="reveal-hint">クリック または Enter で次へ</div>
     </div>
   </div>
   <div class="finale" id="finale">
@@ -832,10 +849,6 @@
       <div class="finale-title" id="finale-title">PERFECT!</div>
       <div class="finale-score"><span id="finale-correct">0</span> <span class="total">/ <span id="finale-total">0</span></span></div>
       <div class="finale-rate" id="finale-rate">正答率 0%</div>
-      <div class="finale-actions">
-        <button class="finale-btn ghost" id="finale-close">結果をみる</button>
-        <button class="finale-btn" id="finale-restart">もう一度</button>
-      </div>
     </div>
   </div>
   <div class="toast" id="toast"></div>
@@ -1076,6 +1089,8 @@
     } else if (rate >= 50) {
       confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
     }
+    const dismissDelay = isPerfect ? 5000 : 3000;
+    setTimeout(() => finale.classList.remove('show'), dismissDelay);
   }
 
   function massiveCelebrate() {
@@ -1131,13 +1146,6 @@
     });
   }
 
-  document.getElementById('finale-close').addEventListener('click', () => {
-    document.getElementById('finale').classList.remove('show');
-  });
-  document.getElementById('finale-restart').addEventListener('click', () => {
-    document.getElementById('finale').classList.remove('show');
-    startRound();
-  });
 
   function checkAnswer(value) {
     if (locked) return;
@@ -1180,10 +1188,25 @@
     document.getElementById('reveal-en').textContent = word.en;
     overlay.classList.add('show');
     playWrongSound();
-    setTimeout(() => {
+    let advanced = false;
+    function advance() {
+      if (advanced) return;
+      advanced = true;
+      overlay.removeEventListener('click', advance);
+      document.removeEventListener('keydown', onKey);
       overlay.classList.remove('show');
       setTimeout(onDone, 250);
-    }, 2200);
+    }
+    function onKey(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        advance();
+      }
+    }
+    setTimeout(() => {
+      overlay.addEventListener('click', advance);
+      document.addEventListener('keydown', onKey);
+    }, 400);
   }
 
   function renderHearts(missed) {
