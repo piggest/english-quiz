@@ -639,13 +639,6 @@
     margin-bottom: 16px;
   }
   .deck-actions .io-btn { flex: 1; }
-  .deck-section-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #718096;
-    letter-spacing: 1px;
-    margin: 16px 0 8px;
-  }
   .deck-card {
     display: flex;
     align-items: center;
@@ -695,27 +688,65 @@
   .deck-mini-btn.primary:hover { background: #5a6fd8; }
   .deck-empty { color: #a0aec0; padding: 16px 0; text-align: center; font-size: 0.9rem; }
 
-  .preset-area {
-    display: none;
+  /* 共通セクション見出し */
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #718096;
+    letter-spacing: 1.5px;
+    margin: 24px 0 10px;
+    text-transform: uppercase;
+  }
+  .section-title:first-child { margin-top: 4px; }
+
+  /* クイック追加 */
+  .quick-add {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
     padding: 14px;
     background: #f7fafc;
     border-radius: 10px;
-    margin-bottom: 16px;
+    align-items: center;
   }
-  .preset-area.show { display: block; }
-  .preset-header {
+  .quick-add input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    background: #fff;
+  }
+  .quick-add input:focus { border-color: #667eea; }
+  .quick-add .quick-add-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
     font-weight: 700;
-    color: #2d3748;
-    margin-bottom: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 0.95rem;
   }
+  .quick-add .quick-add-btn:hover { opacity: 0.9; }
+  @media (max-width: 480px) {
+    .quick-add { flex-wrap: wrap; }
+    .quick-add input { flex: 1 1 100%; }
+    .quick-add .quick-add-btn { width: 100%; }
+  }
+
   .preset-item {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
-    background: #fff;
-    border-radius: 8px;
-    margin-bottom: 6px;
+    padding: 12px 14px;
+    background: #f7fafc;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #edf2f7;
   }
   .preset-item .preset-title { flex: 1; font-weight: 600; color: #2d3748; }
   .preset-item .preset-file { font-size: 0.8rem; color: #a0aec0; margin-right: 8px; font-family: monospace; }
@@ -742,49 +773,22 @@
     <div class="deck-banner" id="deck-banner"></div>
     <div class="tabs">
       <button class="tab active" data-tab="quiz">クイズ</button>
-      <button class="tab" data-tab="register">単語登録</button>
-      <button class="tab" data-tab="list">一覧</button>
+      <button class="tab" data-tab="list">設定</button>
     </div>
 
     <div class="panel active" id="quiz-panel">
       <div id="quiz-content"></div>
     </div>
 
-    <div class="panel" id="register-panel">
-      <div class="form-group">
-        <label>日本語</label>
-        <input type="text" id="input-jp" placeholder="例: りんご">
-      </div>
-      <div class="form-group">
-        <label>英語</label>
-        <input type="text" id="input-en" placeholder="例: apple">
-      </div>
-      <button class="add-btn" id="add-btn">追加する</button>
-    </div>
-
     <div class="panel" id="list-panel">
       <div class="subtabs">
-        <button class="subtab active" data-subtab="words">単語</button>
+        <button class="subtab active" data-subtab="quizset">クイズ設定</button>
+        <button class="subtab" data-subtab="words">単語</button>
         <button class="subtab" data-subtab="decks">デッキ</button>
+        <button class="subtab" data-subtab="presets">プリセット</button>
       </div>
 
-      <div class="subpanel active" id="words-subpanel">
-        <div class="io-bar">
-          <button class="io-btn" id="export-download">TSVダウンロード</button>
-          <button class="io-btn" id="export-copy">TSVコピー</button>
-          <button class="io-btn" id="import-file">ファイル読込</button>
-          <button class="io-btn" id="import-paste">貼り付け</button>
-          <input type="file" id="file-input" accept=".tsv,.txt,text/tab-separated-values" style="display:none">
-        </div>
-        <div class="import-area" id="import-area">
-          <textarea id="import-text" placeholder="りんご	apple&#10;猫	cat&#10;本	book"></textarea>
-          <div class="import-hint">1行1組、日本語と英語をタブ区切り。空行は無視。</div>
-          <div class="row">
-            <button class="io-btn primary" id="import-merge">追記する</button>
-            <button class="io-btn" id="import-replace">全置き換え</button>
-            <button class="io-btn" id="import-cancel">キャンセル</button>
-          </div>
-        </div>
+      <div class="subpanel active" id="quizset-subpanel">
         <div class="round-setting">
           <label for="round-size">1ラウンドの問題数</label>
           <select id="round-size">
@@ -806,6 +810,35 @@
           <span class="range-suffix">問目</span>
           <button class="range-reset" id="range-reset">全範囲</button>
         </div>
+      </div>
+
+      <div class="subpanel" id="words-subpanel">
+        <div class="section-title">追加</div>
+        <div class="quick-add">
+          <input type="text" id="input-jp" placeholder="日本語">
+          <input type="text" id="input-en" placeholder="英語">
+          <button class="quick-add-btn" id="add-btn">追加</button>
+        </div>
+
+        <div class="section-title">インポート / エクスポート</div>
+        <div class="io-bar">
+          <button class="io-btn" id="export-download">TSVダウンロード</button>
+          <button class="io-btn" id="export-copy">TSVコピー</button>
+          <button class="io-btn" id="import-file">ファイル読込</button>
+          <button class="io-btn" id="import-paste">貼り付け</button>
+          <input type="file" id="file-input" accept=".tsv,.txt,text/tab-separated-values" style="display:none">
+        </div>
+        <div class="import-area" id="import-area">
+          <textarea id="import-text" placeholder="りんご	apple&#10;猫	cat&#10;本	book"></textarea>
+          <div class="import-hint">1行1組、日本語と英語をタブ区切り。空行は無視。</div>
+          <div class="row">
+            <button class="io-btn primary" id="import-merge">追記する</button>
+            <button class="io-btn" id="import-replace">全置き換え</button>
+            <button class="io-btn" id="import-cancel">キャンセル</button>
+          </div>
+        </div>
+
+        <div class="section-title">単語一覧</div>
         <div class="word-count" id="word-count"></div>
         <ul class="word-list" id="word-list"></ul>
       </div>
@@ -813,17 +846,15 @@
       <div class="subpanel" id="decks-subpanel">
         <div class="deck-actions">
           <button class="io-btn primary" id="deck-create">新規デッキ作成</button>
-          <button class="io-btn" id="deck-load-preset">プリセット読込</button>
         </div>
-        <div class="preset-area" id="preset-area">
-          <div class="preset-header">プリセット</div>
-          <div id="preset-list"></div>
-          <button class="io-btn" id="preset-cancel" style="margin-top:8px;">閉じる</button>
-        </div>
-        <div class="deck-section-title">現在のデッキ</div>
+        <div class="section-title">現在のデッキ</div>
         <div id="deck-active"></div>
-        <div class="deck-section-title">他のデッキ</div>
+        <div class="section-title">他のデッキ</div>
         <div id="deck-others"></div>
+      </div>
+
+      <div class="subpanel" id="presets-subpanel">
+        <div id="preset-list"><div class="deck-empty">プリセットを読み込み中...</div></div>
       </div>
     </div>
   </div>
@@ -1461,6 +1492,7 @@
       t.classList.add('active');
       document.getElementById(t.dataset.subtab + '-subpanel').classList.add('active');
       if (t.dataset.subtab === 'decks') renderDeckList();
+      if (t.dataset.subtab === 'presets') loadPresetList();
     });
   });
 
@@ -1551,10 +1583,7 @@
   });
 
   // プリセット読込
-  const presetArea = document.getElementById('preset-area');
-
-  document.getElementById('deck-load-preset').addEventListener('click', async () => {
-    presetArea.classList.add('show');
+  async function loadPresetList() {
     const listEl = document.getElementById('preset-list');
     listEl.innerHTML = '<div class="deck-empty">読み込み中...</div>';
     try {
@@ -1580,11 +1609,7 @@
     } catch (e) {
       listEl.innerHTML = '<div class="deck-empty">プリセットを読み込めません<br><small>(ローカル file:// では fetch できません)</small></div>';
     }
-  });
-
-  document.getElementById('preset-cancel').addEventListener('click', () => {
-    presetArea.classList.remove('show');
-  });
+  }
 
   async function loadPreset(preset) {
     try {
@@ -1600,7 +1625,6 @@
       decks.push(newDeck);
       save();
       setActiveDeck(newDeck.id);
-      presetArea.classList.remove('show');
       showToast(`「${preset.title}」を読込（${parsed.length} 単語）`);
     } catch (e) {
       showToast('読込に失敗');
