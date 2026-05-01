@@ -294,6 +294,33 @@
     outline: none;
   }
   .round-setting select:focus { border-color: #667eea; }
+  .round-setting input[type="number"] {
+    width: 76px;
+    padding: 8px 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.95rem;
+    text-align: center;
+    outline: none;
+    color: #2d3748;
+  }
+  .round-setting input[type="number"]:focus { border-color: #667eea; }
+  .round-setting .range-sep { color: #4a5568; font-weight: 600; }
+  .round-setting .range-suffix { color: #4a5568; font-size: 0.9rem; }
+  .round-setting.range-row { flex-wrap: wrap; gap: 8px; }
+  .round-setting.range-row label { flex: none; min-width: 80px; }
+  .range-reset {
+    padding: 8px 12px;
+    background: #edf2f7;
+    border: none;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .range-reset:hover { background: #e2e8f0; }
 
   /* 正解演出 */
   .flash {
@@ -630,6 +657,14 @@
             <option value="all">全部</option>
           </select>
         </div>
+        <div class="round-setting range-row">
+          <label>出題範囲</label>
+          <input type="number" id="range-start" min="1" placeholder="1">
+          <span class="range-sep">〜</span>
+          <input type="number" id="range-end" min="1" placeholder="末尾">
+          <span class="range-suffix">問目</span>
+          <button class="range-reset" id="range-reset">全範囲</button>
+        </div>
         <div class="word-count" id="word-count"></div>
         <ul class="word-list" id="word-list"></ul>
       </div>
@@ -718,8 +753,20 @@
     return a;
   }
 
+  function getRange() {
+    const total = activeDeck.words.length;
+    if (total === 0) return { start: 1, end: 0 };
+    const s = Number.isFinite(activeDeck.rangeStart) && activeDeck.rangeStart > 0 ? activeDeck.rangeStart : 1;
+    const e = Number.isFinite(activeDeck.rangeEnd) && activeDeck.rangeEnd > 0 ? activeDeck.rangeEnd : total;
+    const start = Math.max(1, Math.min(s, total));
+    const end = Math.max(start, Math.min(e, total));
+    return { start, end };
+  }
+
   function startRound() {
-    const shuffled = shuffle(activeDeck.words);
+    const { start, end } = getRange();
+    const sliced = activeDeck.words.slice(start - 1, end);
+    const shuffled = shuffle(sliced);
     const size = roundSize === 'all' ? shuffled.length : Math.min(parseInt(roundSize, 10), shuffled.length);
     queue = shuffled.slice(0, size);
     roundStats = { correct: 0, skipped: 0, failed: 0, total: queue.length };
@@ -771,6 +818,7 @@
     updateBanner();
     renderDeckList();
     renderList();
+    updateRangeInputs();
   }
 
   function updateBanner() {
@@ -1094,6 +1142,44 @@
     showToast(`1ラウンド ${roundSize === 'all' ? '全部' : roundSize + ' 問'} に設定`);
   });
 
+  // 出題範囲設定
+  const rangeStartEl = document.getElementById('range-start');
+  const rangeEndEl = document.getElementById('range-end');
+  const rangeResetBtn = document.getElementById('range-reset');
+
+  function updateRangeInputs() {
+    const total = activeDeck.words.length;
+    rangeStartEl.value = activeDeck.rangeStart || '';
+    rangeEndEl.value = activeDeck.rangeEnd || '';
+    rangeStartEl.max = total || 1;
+    rangeEndEl.max = total || 1;
+    rangeStartEl.placeholder = '1';
+    rangeEndEl.placeholder = String(total || 1);
+  }
+
+  function applyRangeChange() {
+    const total = activeDeck.words.length;
+    const s = parseInt(rangeStartEl.value, 10);
+    const e = parseInt(rangeEndEl.value, 10);
+    activeDeck.rangeStart = isNaN(s) || s < 1 ? null : Math.min(s, total || s);
+    activeDeck.rangeEnd = isNaN(e) || e < 1 ? null : Math.min(e, total || e);
+    if (activeDeck.rangeStart && activeDeck.rangeEnd && activeDeck.rangeStart > activeDeck.rangeEnd) {
+      activeDeck.rangeEnd = activeDeck.rangeStart;
+    }
+    save();
+    updateRangeInputs();
+  }
+
+  rangeStartEl.addEventListener('change', applyRangeChange);
+  rangeEndEl.addEventListener('change', applyRangeChange);
+  rangeResetBtn.addEventListener('click', () => {
+    activeDeck.rangeStart = null;
+    activeDeck.rangeEnd = null;
+    save();
+    updateRangeInputs();
+    showToast('範囲をリセット');
+  });
+
   document.getElementById('import-merge').addEventListener('click', () => applyImport(false));
   document.getElementById('import-replace').addEventListener('click', () => {
     if (!confirm(`現在の ${activeDeck.words.length} 件を全て削除して置き換えます。よろしいですか？`)) return;
@@ -1259,6 +1345,7 @@
   }
 
   updateBanner();
+  updateRangeInputs();
   startRound();
 </script>
 </body>
