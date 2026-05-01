@@ -454,6 +454,131 @@
     font-size: 1.6rem;
     opacity: 0.9;
   }
+  /* フィナーレ演出 */
+  .finale {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6, #06b6d4, #22c55e, #facc15);
+    background-size: 400% 400%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    overflow: hidden;
+  }
+  .finale.show {
+    display: flex;
+    animation: finaleBgShift 4s linear infinite;
+  }
+  @keyframes finaleBgShift {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+  .finale-inner {
+    text-align: center;
+    color: #fff;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+  }
+  .finale-title {
+    font-size: 6.5rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    background: linear-gradient(90deg, #fff, #ffe066, #fff, #ffeb3b, #fff);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255,255,255,0.6);
+    filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+  .finale.show .finale-title {
+    animation: titlePop 0.8s ease-out, titleShine 2s linear infinite 0.8s, titleFloat 2.5s ease-in-out infinite 0.8s;
+  }
+  .finale-title.normal {
+    font-size: 5rem;
+    -webkit-text-stroke: 0;
+    -webkit-text-fill-color: #fff;
+    color: #fff;
+    background: none;
+  }
+  @keyframes titlePop {
+    0% { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+    60% { transform: scale(1.25) rotate(8deg); opacity: 1; }
+    80% { transform: scale(0.95) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  @keyframes titleShine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+  @keyframes titleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  .finale-score {
+    font-size: 3.4rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+  .finale-score .total { font-size: 2rem; opacity: 0.85; }
+  .finale-rate {
+    font-size: 1.4rem;
+    color: #fff;
+    opacity: 0.95;
+    margin-bottom: 28px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .finale-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .finale-btn {
+    padding: 14px 32px;
+    background: #fff;
+    color: #764ba2;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    transition: transform 0.15s;
+  }
+  .finale-btn:hover { transform: scale(1.05); }
+  .finale-btn.ghost {
+    background: transparent;
+    color: #fff;
+    box-shadow: none;
+    border: 2px solid rgba(255,255,255,0.7);
+  }
+  .finale-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .finale-star {
+    position: absolute;
+    font-size: 2.4rem;
+    animation: starTwinkle 1.6s ease-in-out infinite;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+  }
+  @keyframes starTwinkle {
+    0%, 100% { opacity: 0.3; transform: scale(0.7) rotate(0); }
+    50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+  }
+
   /* デッキバナー */
   .deck-banner {
     text-align: center;
@@ -701,6 +826,18 @@
       <div class="reveal-jp" id="reveal-jp"></div>
     </div>
   </div>
+  <div class="finale" id="finale">
+    <div class="finale-stars" id="finale-stars"></div>
+    <div class="finale-inner">
+      <div class="finale-title" id="finale-title">PERFECT!</div>
+      <div class="finale-score"><span id="finale-correct">0</span> <span class="total">/ <span id="finale-total">0</span></span></div>
+      <div class="finale-rate" id="finale-rate">正答率 0%</div>
+      <div class="finale-actions">
+        <button class="finale-btn ghost" id="finale-close">結果をみる</button>
+        <button class="finale-btn" id="finale-restart">もう一度</button>
+      </div>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
 
 <script>
@@ -896,8 +1033,111 @@
       </div>
     `;
     document.getElementById('restart-btn').addEventListener('click', startRound);
-    if (rate === 100) celebrate();
+    if (total > 0) showFinale(rate, correct, total);
   }
+
+  function showFinale(rate, correct, total) {
+    const finale = document.getElementById('finale');
+    const titleEl = document.getElementById('finale-title');
+    const stars = document.getElementById('finale-stars');
+    let label = '';
+    let isPerfect = false;
+    if (rate === 100) { label = 'PERFECT!'; isPerfect = true; }
+    else if (rate >= 80) label = 'GREAT!';
+    else if (rate >= 50) label = 'GOOD!';
+    else label = 'CLEAR';
+    titleEl.textContent = label;
+    titleEl.classList.toggle('normal', !isPerfect);
+    document.getElementById('finale-correct').textContent = correct;
+    document.getElementById('finale-total').textContent = total;
+    document.getElementById('finale-rate').textContent = `正答率 ${rate}%`;
+
+    stars.innerHTML = '';
+    if (isPerfect) {
+      const emojis = ['⭐', '✨', '🎉', '💫', '🌟'];
+      for (let i = 0; i < 14; i++) {
+        const s = document.createElement('div');
+        s.className = 'finale-star';
+        s.textContent = emojis[i % emojis.length];
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 100 + '%';
+        s.style.animationDelay = (Math.random() * 1.5) + 's';
+        stars.appendChild(s);
+      }
+    }
+
+    finale.classList.add('show');
+    if (isPerfect) {
+      perfectFanfare();
+      massiveCelebrate();
+    } else if (rate >= 80) {
+      playCorrectSound();
+      confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
+    } else if (rate >= 50) {
+      confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+    }
+  }
+
+  function massiveCelebrate() {
+    const duration = 4500;
+    const end = Date.now() + duration;
+    const colors = ['#f6e05e', '#fc8181', '#63b3ed', '#68d391', '#b794f4', '#ec4899', '#f59e0b'];
+    (function frame() {
+      confetti({
+        particleCount: 8,
+        angle: 60,
+        spread: 80,
+        origin: { x: 0, y: 0.7 },
+        colors
+      });
+      confetti({
+        particleCount: 8,
+        angle: 120,
+        spread: 80,
+        origin: { x: 1, y: 0.7 },
+        colors
+      });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+    confetti({ particleCount: 220, spread: 160, origin: { y: 0.5 }, colors });
+    setTimeout(() => confetti({ particleCount: 160, spread: 130, origin: { y: 0.4 }, colors }), 700);
+    setTimeout(() => confetti({ particleCount: 160, spread: 130, origin: { y: 0.4 }, colors }), 1500);
+    setTimeout(() => confetti({ particleCount: 200, spread: 160, origin: { y: 0.6 }, colors }), 2400);
+  }
+
+  function perfectFanfare() {
+    const notes = [
+      { f: 523.25, t: 0 },
+      { f: 659.25, t: 0.12 },
+      { f: 783.99, t: 0.24 },
+      { f: 1046.5, t: 0.36 },
+      { f: 783.99, t: 0.6 },
+      { f: 1046.5, t: 0.72 },
+      { f: 1318.5, t: 0.84 },
+      { f: 1568, t: 1.0 },
+      { f: 2093, t: 1.2 }
+    ];
+    notes.forEach(n => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = n.f;
+      gain.gain.setValueAtTime(0.22, audioCtx.currentTime + n.t);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + n.t + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + n.t);
+      osc.stop(audioCtx.currentTime + n.t + 0.5);
+    });
+  }
+
+  document.getElementById('finale-close').addEventListener('click', () => {
+    document.getElementById('finale').classList.remove('show');
+  });
+  document.getElementById('finale-restart').addEventListener('click', () => {
+    document.getElementById('finale').classList.remove('show');
+    startRound();
+  });
 
   function checkAnswer(value) {
     if (locked) return;
@@ -908,8 +1148,13 @@
       locked = true;
       const input = document.getElementById('quiz-input');
       if (input) input.blur();
-      celebrate();
-      setTimeout(() => { locked = false; nextQuestion(); }, 2000);
+      if (queue.length === 0) {
+        playCorrectSound();
+        setTimeout(() => { locked = false; nextQuestion(); }, 500);
+      } else {
+        celebrate();
+        setTimeout(() => { locked = false; nextQuestion(); }, 2000);
+      }
     } else {
       misses++;
       const input = document.getElementById('quiz-input');
