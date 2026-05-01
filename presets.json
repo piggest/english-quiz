@@ -1,4 +1,5 @@
 [
   { "id": "junior-high-1", "title": "中学1年生 英単語", "file": "junior-high-1.tsv" },
+  { "id": "junior-high-1-mid", "title": "中学1年中間", "file": "junior-high-1-mid.tsv" },
   { "id": "e1", "title": "英検1級レベル", "file": "e1.tsv" }
 ]
