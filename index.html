@@ -13,6 +13,10 @@
     min-height: 100vh;
     color: #2d3748;
     overflow-x: hidden;
+    transition: background 0.4s ease;
+  }
+  body.mode-memorize {
+    background: linear-gradient(135deg, #38b2ac 0%, #2c7a7b 100%);
   }
   .container {
     max-width: 720px;
@@ -306,12 +310,126 @@
     color: #2d3748;
   }
   .round-setting input[type="number"]:focus { border-color: #667eea; }
-  .round-setting .range-sep { color: #4a5568; font-weight: 600; }
-  .round-setting .range-suffix { color: #4a5568; font-size: 0.9rem; }
-  .round-setting.range-row { flex-wrap: wrap; gap: 8px; }
-  .round-setting.range-row label { flex: none; min-width: 80px; }
+  .range-section {
+    background: #f7fafc;
+    border-radius: 10px;
+    padding: 14px 16px 16px;
+    margin-bottom: 16px;
+  }
+  .range-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .range-section-header label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.95rem;
+  }
+  .range-info {
+    font-size: 0.85rem;
+    color: #718096;
+    font-weight: 600;
+  }
+  .range-slider {
+    position: relative;
+    height: 28px;
+    margin: 8px 6px 4px;
+  }
+  .range-slider-track-bg {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    transform: translateY(-50%);
+  }
+  .range-slider-fill {
+    position: absolute;
+    top: 50%;
+    height: 6px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 3px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .range-slider-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .range-slider-input::-webkit-slider-runnable-track {
+    background: transparent;
+    height: 28px;
+  }
+  .range-slider-input::-moz-range-track {
+    background: transparent;
+    height: 28px;
+  }
+  .range-slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border: 3px solid #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    margin-top: 0;
+  }
+  .range-slider-input::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border: 3px solid #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  }
+  .range-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .range-controls .range-sep { color: #4a5568; font-weight: 600; }
+  .range-controls .range-suffix { color: #4a5568; font-size: 0.9rem; }
+  .range-nav-btn {
+    padding: 8px 14px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .range-nav-btn:hover:not(:disabled) {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+  }
+  .range-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .range-controls .spacer { flex: 1; }
   .range-reset {
-    padding: 8px 12px;
+    padding: 8px 14px;
     background: #edf2f7;
     border: none;
     border-radius: 8px;
@@ -321,6 +439,69 @@
     cursor: pointer;
   }
   .range-reset:hover { background: #e2e8f0; }
+  .seg-toggle {
+    display: flex;
+    background: #edf2f7;
+    border-radius: 10px;
+    padding: 4px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .seg-btn {
+    padding: 8px 20px;
+    background: transparent;
+    border: none;
+    color: #4a5568;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .seg-btn.active {
+    background: #fff;
+    color: #667eea;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .memorize-reveal {
+    text-align: center;
+    margin: 16px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 14px;
+  }
+  .memorize-reveal-label {
+    font-size: 0.9rem;
+    color: #92400e;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .memorize-reveal-en {
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: #78350f;
+    word-break: break-word;
+    line-height: 1.2;
+  }
+  .memorize-hint {
+    text-align: center;
+    color: #718096;
+    font-size: 0.9rem;
+    margin: 8px 0 12px;
+  }
+  .mode-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    color: #fff;
+  }
 
   /* 正解演出 */
   .flash {
@@ -486,6 +667,12 @@
     display: flex;
     animation: finaleBgShift 4s linear infinite;
   }
+  .finale.memorize {
+    background: linear-gradient(135deg, #38b2ac, #2c7a7b);
+    background-size: 100% 100%;
+    animation: none;
+  }
+  .finale.memorize.show { animation: none; }
   @keyframes finaleBgShift {
     0% { background-position: 0% 0%; }
     50% { background-position: 100% 100%; }
@@ -790,6 +977,13 @@
 
       <div class="subpanel active" id="quizset-subpanel">
         <div class="round-setting">
+          <label>モード</label>
+          <div class="seg-toggle" id="mode-toggle">
+            <button class="seg-btn active" data-mode="quiz">クイズ</button>
+            <button class="seg-btn" data-mode="memorize">覚える</button>
+          </div>
+        </div>
+        <div class="round-setting">
           <label for="round-size">1ラウンドの問題数</label>
           <select id="round-size">
             <option value="10">10 問</option>
@@ -802,13 +996,27 @@
             <option value="all">全部</option>
           </select>
         </div>
-        <div class="round-setting range-row">
-          <label>出題範囲</label>
-          <input type="number" id="range-start" min="1" placeholder="1">
-          <span class="range-sep">〜</span>
-          <input type="number" id="range-end" min="1" placeholder="末尾">
-          <span class="range-suffix">問目</span>
-          <button class="range-reset" id="range-reset">全範囲</button>
+        <div class="range-section">
+          <div class="range-section-header">
+            <label>出題範囲</label>
+            <span class="range-info" id="range-info">全範囲</span>
+          </div>
+          <div class="range-slider" id="range-slider">
+            <div class="range-slider-track-bg"></div>
+            <div class="range-slider-fill" id="range-slider-fill"></div>
+            <input type="range" class="range-slider-input" id="range-slider-start" min="1" max="1" value="1">
+            <input type="range" class="range-slider-input" id="range-slider-end" min="1" max="1" value="1">
+          </div>
+          <div class="range-controls">
+            <input type="number" id="range-start" min="1" placeholder="1">
+            <span class="range-suffix">問目から</span>
+            <input type="number" id="range-count" min="1" placeholder="残り全部">
+            <span class="range-suffix">問</span>
+            <span class="spacer"></span>
+            <button class="range-nav-btn" id="range-prev" title="前のセット">←</button>
+            <button class="range-nav-btn" id="range-next" title="次のセット">→</button>
+            <button class="range-reset" id="range-reset">全範囲</button>
+          </div>
         </div>
       </div>
 
@@ -888,6 +1096,7 @@
   const DECKS_KEY = 'english-quiz-decks';
   const ACTIVE_DECK_KEY = 'english-quiz-active-deck-id';
   const ROUND_SIZE_KEY = 'english-quiz-round-size';
+  const MODE_KEY = 'english-quiz-mode';
 
   function genId() { return 'd' + Date.now() + Math.floor(Math.random() * 1000); }
 
@@ -918,9 +1127,12 @@
   let availablePresets = [];
 
   let roundSize = localStorage.getItem(ROUND_SIZE_KEY) || 'all';
+  let mode = localStorage.getItem(MODE_KEY) || 'quiz';
   const MAX_MISSES = 3;
   let currentWord = null;
   let queue = [];
+  let mistakeQueue = [];
+  let memorizeRetry = false;
   let roundStats = { correct: 0, skipped: 0, failed: 0, total: 0 };
   let misses = 0;
   let locked = false;
@@ -938,9 +1150,16 @@
     const total = activeDeck.words.length;
     if (total === 0) return { start: 1, end: 0 };
     const s = Number.isFinite(activeDeck.rangeStart) && activeDeck.rangeStart > 0 ? activeDeck.rangeStart : 1;
-    const e = Number.isFinite(activeDeck.rangeEnd) && activeDeck.rangeEnd > 0 ? activeDeck.rangeEnd : total;
+    let c;
+    if (Number.isFinite(activeDeck.rangeCount) && activeDeck.rangeCount > 0) {
+      c = activeDeck.rangeCount;
+    } else if (Number.isFinite(activeDeck.rangeEnd) && activeDeck.rangeEnd > 0) {
+      c = activeDeck.rangeEnd - s + 1;
+    } else {
+      c = total;
+    }
     const start = Math.max(1, Math.min(s, total));
-    const end = Math.max(start, Math.min(e, total));
+    const end = Math.min(start + c - 1, total);
     return { start, end };
   }
 
@@ -948,8 +1167,14 @@
     const { start, end } = getRange();
     const sliced = activeDeck.words.slice(start - 1, end);
     const shuffled = shuffle(sliced);
-    const size = roundSize === 'all' ? shuffled.length : Math.min(parseInt(roundSize, 10), shuffled.length);
-    queue = shuffled.slice(0, size);
+    if (mode === 'memorize') {
+      queue = shuffled.slice();
+    } else {
+      const size = roundSize === 'all' ? shuffled.length : Math.min(parseInt(roundSize, 10), shuffled.length);
+      queue = shuffled.slice(0, size);
+    }
+    mistakeQueue = [];
+    memorizeRetry = false;
     roundStats = { correct: 0, skipped: 0, failed: 0, total: queue.length };
     nextQuestion();
   }
@@ -1004,7 +1229,10 @@
 
   function updateBanner() {
     const banner = document.getElementById('deck-banner');
-    if (banner) banner.textContent = activeDeck ? activeDeck.title : '';
+    if (!banner) return;
+    if (!activeDeck) { banner.textContent = ''; return; }
+    const badge = mode === 'memorize' ? '<span class="mode-badge">覚える</span>' : '';
+    banner.innerHTML = escapeHtml(activeDeck.title) + badge;
   }
 
   function showToast(msg) {
@@ -1028,28 +1256,78 @@
 
   // クイズ出題
   function nextQuestion() {
+    memorizeRetry = false;
     const content = document.getElementById('quiz-content');
     if (activeDeck.words.length === 0) {
-      content.innerHTML = '<div class="quiz-empty">単語がまだ登録されていません。<br>「単語登録」タブから追加してください。</div>';
+      content.innerHTML = '<div class="quiz-empty">単語がまだ登録されていません。<br>「設定」タブから追加してください。</div>';
       return;
     }
     if (queue.length === 0) {
-      showResult();
-      return;
+      if (mode === 'memorize' && mistakeQueue.length > 0) {
+        const retry = shuffle(mistakeQueue);
+        mistakeQueue = [];
+        queue = retry;
+        showToast(`間違えた ${queue.length} 問を再出題`);
+      } else {
+        showResult();
+        return;
+      }
     }
     currentWord = queue.shift();
     misses = 0;
-    const progress = roundStats.total - queue.length;
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const content = document.getElementById('quiz-content');
+    const remaining = queue.length + mistakeQueue.length + 1;
+    const progress = roundStats.total - remaining + 1;
+    if (mode === 'memorize') {
+      content.innerHTML = `
+        <div class="quiz-jp">${escapeHtml(currentWord.jp)}</div>
+        <input type="text" class="quiz-input" id="quiz-input" placeholder="英語で入力" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="quiz-meta">
+          <span>進捗: ${progress} / ${roundStats.total}</span>
+          <span>未習得: ${mistakeQueue.length}</span>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="quiz-jp">${escapeHtml(currentWord.jp)}</div>
+        <input type="text" class="quiz-input" id="quiz-input" placeholder="英語で入力" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="hearts" id="hearts">${renderHearts(0)}</div>
+        <div class="quiz-meta">
+          <span>${progress} / ${roundStats.total} 問</span>
+          <span>正解: ${roundStats.correct}</span>
+        </div>
+      `;
+    }
+    bindInput();
+  }
+
+  function showMemorizeReveal() {
+    const content = document.getElementById('quiz-content');
+    const remaining = queue.length + mistakeQueue.length + 1;
+    const progress = roundStats.total - remaining + 1;
     content.innerHTML = `
       <div class="quiz-jp">${escapeHtml(currentWord.jp)}</div>
-      <input type="text" class="quiz-input" id="quiz-input" placeholder="英語で入力" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <div class="hearts" id="hearts">${renderHearts(0)}</div>
+      <div class="memorize-reveal">
+        <div class="memorize-reveal-label">こたえ</div>
+        <div class="memorize-reveal-en">${escapeHtml(currentWord.en)}</div>
+      </div>
+      <div class="memorize-hint">同じ単語を入力して覚えよう</div>
+      <input type="text" class="quiz-input" id="quiz-input" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="quiz-meta">
-        <span>${progress} / ${roundStats.total} 問</span>
-        <span>正解: ${roundStats.correct}</span>
+        <span>進捗: ${progress} / ${roundStats.total}</span>
+        <span>未習得: ${mistakeQueue.length}</span>
       </div>
     `;
+    bindInput();
+  }
+
+  function bindInput() {
     const input = document.getElementById('quiz-input');
+    if (!input) return;
     input.focus();
     input.addEventListener('keydown', (e) => {
       if (locked) { e.preventDefault(); return; }
@@ -1086,12 +1364,16 @@
     const stars = document.getElementById('finale-stars');
     let label = '';
     let isPerfect = false;
-    if (rate === 100) { label = 'PERFECT!'; isPerfect = true; }
-    else if (rate >= 80) label = 'GREAT!';
+    if (mode === 'memorize') {
+      label = '練習おわり';
+    } else if (rate === 100) {
+      label = 'PERFECT!'; isPerfect = true;
+    } else if (rate >= 80) label = 'GREAT!';
     else if (rate >= 50) label = 'GOOD!';
     else label = 'CLEAR';
     titleEl.textContent = label;
     titleEl.classList.toggle('normal', !isPerfect);
+    finale.classList.toggle('memorize', mode === 'memorize');
     document.getElementById('finale-correct').textContent = correct;
     document.getElementById('finale-total').textContent = total;
     document.getElementById('finale-rate').textContent = `正答率 ${rate}%`;
@@ -1183,6 +1465,15 @@
     const answer = value.trim().toLowerCase();
     const correct = currentWord.en.trim().toLowerCase();
     if (answer === correct) {
+      if (memorizeRetry) {
+        memorizeRetry = false;
+        locked = true;
+        const input = document.getElementById('quiz-input');
+        if (input) input.blur();
+        playCorrectSound();
+        setTimeout(() => { locked = false; nextQuestion(); }, 400);
+        return;
+      }
       roundStats.correct++;
       locked = true;
       const input = document.getElementById('quiz-input');
@@ -1190,6 +1481,24 @@
       celebrate();
       setTimeout(() => { locked = false; nextQuestion(); }, 2000);
     } else {
+      if (mode === 'memorize') {
+        const input = document.getElementById('quiz-input');
+        if (memorizeRetry) {
+          if (input) {
+            input.classList.add('shake');
+            setTimeout(() => input.classList.remove('shake'), 400);
+            input.select();
+          }
+          playWrongSound();
+          return;
+        }
+        memorizeRetry = true;
+        roundStats.failed++;
+        mistakeQueue.push(currentWord);
+        playWrongSound();
+        showMemorizeReveal();
+        return;
+      }
       misses++;
       const input = document.getElementById('quiz-input');
       const hearts = document.getElementById('hearts');
@@ -1436,41 +1745,151 @@
     showToast(`1ラウンド ${roundSize === 'all' ? '全部' : roundSize + ' 問'} に設定`);
   });
 
+  // モード切替
+  function updateModeUI() {
+    document.querySelectorAll('#mode-toggle .seg-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    roundSelect.disabled = (mode === 'memorize');
+    roundSelect.style.opacity = roundSelect.disabled ? '0.5' : '1';
+    document.body.classList.toggle('mode-memorize', mode === 'memorize');
+  }
+  document.querySelectorAll('#mode-toggle .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      localStorage.setItem(MODE_KEY, mode);
+      updateModeUI();
+      updateBanner();
+      showToast(mode === 'memorize' ? '覚えるモード（次のラウンドから）' : 'クイズモード（次のラウンドから）');
+    });
+  });
+  updateModeUI();
+
   // 出題範囲設定
   const rangeStartEl = document.getElementById('range-start');
-  const rangeEndEl = document.getElementById('range-end');
+  const rangeCountEl = document.getElementById('range-count');
   const rangeResetBtn = document.getElementById('range-reset');
+  const sliderStart = document.getElementById('range-slider-start');
+  const sliderEnd = document.getElementById('range-slider-end');
+  const sliderFill = document.getElementById('range-slider-fill');
+  const rangeInfo = document.getElementById('range-info');
+  const rangePrev = document.getElementById('range-prev');
+  const rangeNext = document.getElementById('range-next');
+
+  function getRequestedCount() {
+    if (Number.isFinite(activeDeck.rangeCount) && activeDeck.rangeCount > 0) {
+      return activeDeck.rangeCount;
+    }
+    if (Number.isFinite(activeDeck.rangeEnd) && activeDeck.rangeEnd > 0) {
+      const s = Number.isFinite(activeDeck.rangeStart) && activeDeck.rangeStart > 0 ? activeDeck.rangeStart : 1;
+      return activeDeck.rangeEnd - s + 1;
+    }
+    return null;
+  }
 
   function updateRangeInputs() {
     const total = activeDeck.words.length;
-    rangeStartEl.value = activeDeck.rangeStart || '';
-    rangeEndEl.value = activeDeck.rangeEnd || '';
-    rangeStartEl.max = total || 1;
-    rangeEndEl.max = total || 1;
+    const cap = Math.max(1, total);
+    const explicit = activeDeck.rangeStart || activeDeck.rangeCount || activeDeck.rangeEnd;
+    const { start, end } = total > 0 ? getRange() : { start: 1, end: 1 };
+    const requestedCount = getRequestedCount();
+
+    sliderStart.max = cap;
+    sliderEnd.max = cap;
+    sliderStart.value = start;
+    sliderEnd.value = end;
+
+    rangeStartEl.max = cap;
+    rangeCountEl.max = cap;
     rangeStartEl.placeholder = '1';
-    rangeEndEl.placeholder = String(total || 1);
+    rangeCountEl.placeholder = String(cap);
+    rangeStartEl.value = activeDeck.rangeStart || '';
+    rangeCountEl.value = requestedCount || '';
+
+    const denom = cap > 1 ? cap - 1 : 1;
+    const leftPct = ((start - 1) / denom) * 100;
+    const rightPct = ((end - 1) / denom) * 100;
+    sliderFill.style.left = leftPct + '%';
+    sliderFill.style.width = Math.max(0, rightPct - leftPct) + '%';
+
+    if (total === 0) {
+      rangeInfo.textContent = '単語なし';
+    } else if (!explicit) {
+      rangeInfo.textContent = `全範囲（${total}問）`;
+    } else {
+      const requested = requestedCount || (end - start + 1);
+      const actual = end - start + 1;
+      const suffix = requested !== actual ? `（実際 ${actual}問）` : '';
+      rangeInfo.textContent = `${start}問目から ${requested}問${suffix}`;
+    }
+
+    rangePrev.disabled = total === 0 || start <= 1;
+    const nextCount = requestedCount || (end - start + 1);
+    rangeNext.disabled = total === 0 || (start + nextCount) > total;
+  }
+
+  function setRange(s, c) {
+    activeDeck.rangeStart = s;
+    activeDeck.rangeCount = c;
+    delete activeDeck.rangeEnd;
+    save();
+    updateRangeInputs();
   }
 
   function applyRangeChange() {
     const total = activeDeck.words.length;
     const s = parseInt(rangeStartEl.value, 10);
-    const e = parseInt(rangeEndEl.value, 10);
-    activeDeck.rangeStart = isNaN(s) || s < 1 ? null : Math.min(s, total || s);
-    activeDeck.rangeEnd = isNaN(e) || e < 1 ? null : Math.min(e, total || e);
-    if (activeDeck.rangeStart && activeDeck.rangeEnd && activeDeck.rangeStart > activeDeck.rangeEnd) {
-      activeDeck.rangeEnd = activeDeck.rangeStart;
-    }
-    save();
-    updateRangeInputs();
+    const c = parseInt(rangeCountEl.value, 10);
+    let nextS = isNaN(s) || s < 1 ? null : Math.min(s, total || s);
+    let nextC = isNaN(c) || c < 1 ? null : c;
+    setRange(nextS, nextC);
   }
 
   rangeStartEl.addEventListener('change', applyRangeChange);
-  rangeEndEl.addEventListener('change', applyRangeChange);
+  rangeCountEl.addEventListener('change', applyRangeChange);
+
+  sliderStart.addEventListener('input', () => {
+    const total = activeDeck.words.length;
+    if (total === 0) return;
+    let s = +sliderStart.value;
+    let e = +sliderEnd.value;
+    if (s > e) e = s;
+    setRange(s, e - s + 1);
+  });
+  sliderEnd.addEventListener('input', () => {
+    const total = activeDeck.words.length;
+    if (total === 0) return;
+    let s = +sliderStart.value;
+    let e = +sliderEnd.value;
+    if (e < s) s = e;
+    setRange(s, e - s + 1);
+  });
+
+  rangePrev.addEventListener('click', () => {
+    const total = activeDeck.words.length;
+    if (total === 0) return;
+    const { start, end } = getRange();
+    const count = getRequestedCount() || (end - start + 1);
+    let newS = start - count;
+    if (newS < 1) newS = 1;
+    if (newS === start) return;
+    setRange(newS, count);
+  });
+  rangeNext.addEventListener('click', () => {
+    const total = activeDeck.words.length;
+    if (total === 0) return;
+    const { start, end } = getRange();
+    const count = getRequestedCount() || (end - start + 1);
+    let newS = start + count;
+    if (newS > total) {
+      showToast('これ以上進めません');
+      return;
+    }
+    setRange(newS, count);
+  });
+
   rangeResetBtn.addEventListener('click', () => {
-    activeDeck.rangeStart = null;
-    activeDeck.rangeEnd = null;
-    save();
-    updateRangeInputs();
+    setRange(null, null);
     showToast('範囲をリセット');
   });
 
