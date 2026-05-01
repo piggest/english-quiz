@@ -1156,13 +1156,8 @@
       locked = true;
       const input = document.getElementById('quiz-input');
       if (input) input.blur();
-      if (queue.length === 0) {
-        playCorrectSound();
-        setTimeout(() => { locked = false; nextQuestion(); }, 500);
-      } else {
-        celebrate();
-        setTimeout(() => { locked = false; nextQuestion(); }, 2000);
-      }
+      celebrate();
+      setTimeout(() => { locked = false; nextQuestion(); }, 2000);
     } else {
       misses++;
       const input = document.getElementById('quiz-input');
