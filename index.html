@@ -1485,12 +1485,17 @@
       if (mode === 'memorize') {
         const input = document.getElementById('quiz-input');
         if (memorizeRetry) {
-          if (input) {
-            input.classList.add('shake');
-            setTimeout(() => input.classList.remove('shake'), 400);
-            input.select();
-          }
+          locked = true;
           playWrongSound();
+          if (input) input.classList.add('shake');
+          setTimeout(() => {
+            if (input) {
+              input.classList.remove('shake');
+              input.focus();
+              input.select();
+            }
+            locked = false;
+          }, 400);
           return;
         }
         memorizeRetry = true;
@@ -1501,19 +1506,25 @@
         return;
       }
       misses++;
+      locked = true;
       const input = document.getElementById('quiz-input');
       const hearts = document.getElementById('hearts');
       if (hearts) hearts.innerHTML = renderHearts(misses);
-      input.classList.add('shake');
+      if (input) input.classList.add('shake');
       playWrongSound();
-      setTimeout(() => input.classList.remove('shake'), 400);
       if (misses >= MAX_MISSES) {
-        locked = true;
         roundStats.failed++;
         if (input) input.blur();
         revealAnswer(currentWord, () => { locked = false; nextQuestion(); });
       } else {
-        input.select();
+        setTimeout(() => {
+          if (input) {
+            input.classList.remove('shake');
+            input.focus();
+            input.select();
+          }
+          locked = false;
+        }, 400);
       }
     }
   }
