@@ -1136,6 +1136,7 @@
   let roundStats = { correct: 0, skipped: 0, failed: 0, total: 0 };
   let misses = 0;
   let locked = false;
+  let lastSubmitted = null;
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -1279,6 +1280,7 @@
   }
 
   function renderQuestion() {
+    lastSubmitted = null;
     const content = document.getElementById('quiz-content');
     const remaining = queue.length + mistakeQueue.length + 1;
     const progress = roundStats.total - remaining + 1;
@@ -1306,6 +1308,7 @@
   }
 
   function showMemorizeReveal() {
+    lastSubmitted = null;
     const content = document.getElementById('quiz-content');
     const remaining = queue.length + mistakeQueue.length + 1;
     const progress = roundStats.total - remaining + 1;
@@ -1464,6 +1467,8 @@
     if (locked) return;
     const answer = value.trim().toLowerCase();
     if (!answer) return;
+    if (answer === lastSubmitted) return;
+    lastSubmitted = answer;
     const correct = currentWord.en.trim().toLowerCase();
     if (answer === correct) {
       if (memorizeRetry) {
