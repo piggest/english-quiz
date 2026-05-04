@@ -1307,7 +1307,7 @@
     bindInput();
   }
 
-  function showMemorizeReveal() {
+  function showMemorizeReveal(prefill = '') {
     lastSubmitted = null;
     const content = document.getElementById('quiz-content');
     const remaining = queue.length + mistakeQueue.length + 1;
@@ -1319,13 +1319,15 @@
         <div class="memorize-reveal-en">${escapeHtml(currentWord.en)}</div>
       </div>
       <div class="memorize-hint">同じ単語を入力して覚えよう</div>
-      <input type="text" class="quiz-input" id="quiz-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input type="text" class="quiz-input" id="quiz-input" value="${escapeHtml(prefill)}" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="quiz-meta">
         <span>進捗: ${progress} / ${roundStats.total}</span>
         <span>未習得: ${mistakeQueue.length}</span>
       </div>
     `;
     bindInput();
+    const input = document.getElementById('quiz-input');
+    if (input && prefill) input.select();
   }
 
   function bindInput() {
@@ -1507,7 +1509,7 @@
         roundStats.failed++;
         mistakeQueue.push(currentWord);
         playWrongSound();
-        showMemorizeReveal();
+        showMemorizeReveal(value);
         return;
       }
       misses++;
